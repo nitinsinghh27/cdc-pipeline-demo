@@ -1,0 +1,24 @@
+{
+  "name": "mysql-source",
+  "config": {
+    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+    "database.hostname": "mysql",
+    "database.port": "3306",
+    "database.user": "debezium",
+    "database.password": "debezium_pass",
+    "database.server.id": "12345",
+    "topic.prefix": "demo",
+    "database.include.list": "demo_db",
+    "table.include.list": "demo_db.stores,demo_db.products,demo_db.inventory,demo_db.orders",
+    "schema.history.internal.kafka.bootstrap.servers": "redpanda:9092",
+    "schema.history.internal.kafka.topic": "schema-changes.demo_db",
+    "include.schema.changes": "true",
+    "snapshot.mode": "initial",
+    "decimal.handling.mode": "double",
+    "time.precision.mode": "connect",
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": "false",
+    "transforms.unwrap.delete.handling.mode": "rewrite"
+  }
+}

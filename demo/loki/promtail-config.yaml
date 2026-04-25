@@ -1,0 +1,34 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Auto-discover all Docker containers and ship their logs to Loki
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      # Container name becomes the "container" label (strips leading /)
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: container
+
+      # Log stream label (stdout / stderr)
+      - source_labels: ['__meta_docker_container_log_stream']
+        target_label: stream
+
+      # Compose service label
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: service
+
+      # Drop containers with no compose service (unrelated local containers)
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_project']
+        regex: 'demo'
+        action: keep

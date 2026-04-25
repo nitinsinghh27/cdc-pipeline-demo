@@ -1,0 +1,36 @@
+apiVersion: 1
+
+datasources:
+
+  - name: Prometheus
+    uid: prometheus-ds
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      timeInterval: 15s
+
+  - name: PostgreSQL
+    uid: postgres-ds
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    database: staging_db
+    user: postgres
+    secureJsonData:
+      password: postgres_pass
+    jsonData:
+      sslmode: disable
+      maxOpenConns: 5
+      maxIdleConns: 2
+      connMaxLifetime: 14400
+      postgresVersion: 1500
+
+  - name: Loki
+    uid: loki-ds
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    jsonData:
+      maxLines: 1000

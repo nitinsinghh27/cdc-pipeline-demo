@@ -1,0 +1,17 @@
+# Claude API
+anthropic>=0.34.0
+
+# HTTP client (Grafana, Kafka Connect, Redpanda Admin API)
+requests>=2.31.0
+
+# AWS S3 / MinIO client
+boto3>=1.34.0
+
+# PostgreSQL client
+psycopg2-binary>=2.9.9
+
+# MySQL client
+PyMySQL>=1.1.0
+
+# Environment variables
+python-dotenv>=1.0.0

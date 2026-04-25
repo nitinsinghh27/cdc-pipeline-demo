@@ -1,0 +1,16 @@
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+
+scrape_configs:
+
+  # Redpanda exposes Prometheus metrics natively at :9644/metrics
+  - job_name: redpanda
+    static_configs:
+      - targets: ['redpanda:9644']
+    metrics_path: /metrics
+
+  # Prometheus self-monitoring
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']

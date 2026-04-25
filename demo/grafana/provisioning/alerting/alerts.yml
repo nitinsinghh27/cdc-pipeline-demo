@@ -1,0 +1,56 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: CDC Pipeline
+    folder: CDC Alerts
+    interval: 1m
+    rules:
+
+      # Alert when no stores are in Postgres (data not flowing at all)
+      - uid: cdc-no-stores-data
+        title: "No stores data in PostgreSQL"
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: postgres-ds
+            model:
+              rawQuery: true
+              rawSql: "SELECT CASE WHEN COUNT(*) = 0 THEN 1 ELSE 0 END AS val FROM stores"
+              format: table
+        noDataState: Alerting
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: "CDC pipeline not delivering data"
+          description: >
+            The stores table in PostgreSQL has no records.
+            Either the Debezium connector is not running or the consumer is down.
+        labels:
+          severity: critical
+          component: cdc-pipeline
+
+      # Alert when orders table has no recent inserts (stale data)
+      - uid: cdc-stale-orders
+        title: "No orders data in PostgreSQL"
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: postgres-ds
+            model:
+              rawQuery: true
+              rawSql: "SELECT CASE WHEN COUNT(*) = 0 THEN 1 ELSE 0 END AS val FROM orders"
+              format: table
+        noDataState: Alerting
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "No orders data in PostgreSQL"
+          description: >
+            The orders table is empty — CDC may not be running or the consumer
+            has not yet processed events from this table.
+        labels:
+          severity: warning
+          component: cdc-pipeline

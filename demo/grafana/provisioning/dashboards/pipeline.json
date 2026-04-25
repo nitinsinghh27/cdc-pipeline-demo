@@ -1,0 +1,233 @@
+{
+  "title": "CDC Pipeline Overview",
+  "uid": "cdc-pipeline-demo",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "templating": { "list": [] },
+  "annotations": { "list": [] },
+  "links": [],
+  "panels": [
+
+    {
+      "id": 1,
+      "type": "text",
+      "title": "Pipeline Architecture",
+      "gridPos": { "h": 3, "w": 24, "x": 0, "y": 0 },
+      "options": {
+        "mode": "markdown",
+        "content": "## CDC Pipeline: MySQL → Debezium → Redpanda → Consumer → PostgreSQL\n**Monitoring:** Prometheus (metrics) · Loki (logs) · Grafana (dashboards + alerts)"
+      }
+    },
+
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Stores (CDC'd to Postgres)",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 3 },
+      "datasource": { "type": "postgres", "uid": "postgres-ds" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Records\" FROM stores"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",   "value": null },
+              { "color": "green", "value": 1    }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Orders (CDC'd to Postgres)",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 3 },
+      "datasource": { "type": "postgres", "uid": "postgres-ds" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Records\" FROM orders"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",   "value": null },
+              { "color": "green", "value": 1    }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Inventory Rows",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 3 },
+      "datasource": { "type": "postgres", "uid": "postgres-ds" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Records\" FROM inventory"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",   "value": null },
+              { "color": "green", "value": 1    }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Redpanda — Messages Produced (rate/min)",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 3 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-ds" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(vectorized_cluster_partition_records_produced_total[1m]) * 60",
+          "legendFormat": "records/min"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2 }
+        },
+        "overrides": []
+      },
+      "options": { "tooltip": { "mode": "single" } }
+    },
+
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Recent Orders in PostgreSQL",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 7 },
+      "datasource": { "type": "postgres", "uid": "postgres-ds" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT order_id, store_id, product_id, quantity, unit_price, total_amount, status, created_at FROM orders ORDER BY created_at DESC LIMIT 20"
+        }
+      ],
+      "options": { "sortBy": [{ "displayName": "created_at", "desc": true }] },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "status" },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  { "type": "value", "options": { "completed":  { "color": "green",  "index": 0 } } },
+                  { "type": "value", "options": { "pending":    { "color": "yellow", "index": 1 } } },
+                  { "type": "value", "options": { "processing": { "color": "blue",   "index": 2 } } },
+                  { "type": "value", "options": { "failed":     { "color": "red",    "index": 3 } } }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+
+    {
+      "id": 7,
+      "type": "logs",
+      "title": "Kafka Connect Logs",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
+      "datasource": { "type": "loki", "uid": "loki-ds" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{container=\"demo-kafka-connect\"}",
+          "queryType": "range"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "wrapLogMessage": false
+      }
+    },
+
+    {
+      "id": 8,
+      "type": "logs",
+      "title": "CDC Consumer Logs",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 22 },
+      "datasource": { "type": "loki", "uid": "loki-ds" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{container=\"demo-consumer\"}",
+          "queryType": "range"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      }
+    }
+
+  ]
+}
